@@ -61,7 +61,7 @@ func Test_Deck(t *testing.T) {
 		t.Skip()
 
 		Source := "E:\\Project\\Y\\Final\\A-Decks"
-		ResultDir := "..\\Generated"
+		ResultDir := "..\\generated"
 
 		deckDirs, err := FindAllEndDirsectories(Source)
 		require.NoError(t, err)
@@ -75,7 +75,7 @@ func Test_Deck(t *testing.T) {
 		t.Skip()
 
 		Source := "E:\\Project\\Y\\Final\\A-Decks\\Passives"
-		ResultDir := "..\\Generated"
+		ResultDir := "..\\generated"
 
 		decks, err := LoadAllDecks([]string{Source})
 		require.NoError(t, err)
