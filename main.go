@@ -11,7 +11,12 @@ const (
 )
 
 func main() {
-	decks, err := imageprocessing.LoadAllDecks(Source)
+	deckDirs, err := imageprocessing.FindAllEndDirsectories(Source)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+
+	decks, err := imageprocessing.LoadAllDecks(deckDirs)
 	if err != nil {
 		fmt.Println("error:", err)
 	}

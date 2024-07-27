@@ -1,6 +1,7 @@
 package imageprocessing
 
 import (
+	"fmt"
 	"image"
 	"image/png"
 	"io/fs"
@@ -13,7 +14,7 @@ func GetImageFiles(dirPath string) ([]string, error) {
 
 	if err := filepath.Walk(dirPath, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return fmt.Errorf("GetImageFiles: filepath.Walk %v", err)
 		}
 
 		if !info.IsDir() {
@@ -43,16 +44,31 @@ func LoadImages(imageFiles []string) ([]image.Image, error) {
 	return images, nil
 }
 
-func LoadImage(imagePath string) (image.Image, error) {
+func LoadImage_PNG(imagePath string) (image.Image, error) {
 	imageFile, err := os.Open(imagePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("LoadImage: os.Open %v", err)
 	}
 	defer imageFile.Close()
 
 	image, err := png.Decode(imageFile)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("LoadImage: png.Decode %v", err)
+	}
+
+	return image, nil
+}
+
+func LoadImage(imagePath string) (image.Image, error) {
+	imageFile, err := os.Open(imagePath)
+	if err != nil {
+		return nil, fmt.Errorf("LoadImage: os.Open %v", err)
+	}
+	defer imageFile.Close()
+
+	image, _, err := image.Decode(imageFile)
+	if err != nil {
+		return nil, fmt.Errorf("LoadImage: image.Decode %v %v", imagePath, err)
 	}
 
 	return image, nil

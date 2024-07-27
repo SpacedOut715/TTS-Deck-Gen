@@ -11,7 +11,9 @@ func Test_Deck(t *testing.T) {
 	exportPath := "..\\tmp-test"
 
 	t.Run("Test Load Stats", func(t *testing.T) {
-		decks, err := LoadAllDecks(rootPath)
+		deckDirs, err := FindAllEndDirsectories(rootPath)
+		require.NoError(t, err)
+		decks, err := LoadAllDecks(deckDirs)
 		require.NoError(t, err)
 		deck := decks.Decks[0]
 
@@ -23,7 +25,9 @@ func Test_Deck(t *testing.T) {
 	})
 
 	t.Run("Test CheckSizes", func(t *testing.T) {
-		decks, err := LoadAllDecks(rootPath)
+		deckDirs, err := FindAllEndDirsectories(rootPath)
+		require.NoError(t, err)
+		decks, err := LoadAllDecks(deckDirs)
 		require.NoError(t, err)
 		deck := decks.Decks[0]
 
@@ -32,26 +36,48 @@ func Test_Deck(t *testing.T) {
 	})
 
 	t.Run("Export Test", func(t *testing.T) {
-		decks, err := LoadAllDecks(rootPath)
+		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
+		decks, err := LoadAllDecks(deckDirs)
+		require.NoError(t, err)
+		deck := decks.Decks[0]
 
-		err = decks.Decks[0].ExportDeck(exportPath)
+		err = deck.ExportDeck(exportPath)
 		require.NoError(t, err)
 	})
 
 	t.Run("Export Test Big", func(t *testing.T) {
-		decks, err := LoadAllDecks(rootPath)
+		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
+		decks, err := LoadAllDecks(deckDirs)
+		require.NoError(t, err)
+		deck := decks.Decks[1]
 
-		err = decks.Decks[1].ExportDeck(exportPath)
+		err = deck.ExportDeck(exportPath)
 		require.NoError(t, err)
 	})
 
-	t.Run("Test Functionality", func(t *testing.T) {
+	t.Run("Test Full Functionality", func(t *testing.T) {
+		t.Skip()
+
 		Source := "E:\\Project\\Y\\Final\\A-Decks"
 		ResultDir := "..\\Generated"
 
-		decks, err := LoadAllDecks(Source)
+		deckDirs, err := FindAllEndDirsectories(Source)
+		require.NoError(t, err)
+		decks, err := LoadAllDecks(deckDirs)
+		require.NoError(t, err)
+
+		decks.ExportDecks(ResultDir)
+	})
+
+	t.Run("Test Bug Width*10 >>> MaxRowCount", func(t *testing.T) {
+		t.Skip()
+
+		Source := "E:\\Project\\Y\\Final\\A-Decks\\Passives"
+		ResultDir := "..\\Generated"
+
+		decks, err := LoadAllDecks([]string{Source})
 		require.NoError(t, err)
 
 		decks.ExportDecks(ResultDir)

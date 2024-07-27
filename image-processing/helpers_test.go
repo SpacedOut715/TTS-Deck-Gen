@@ -7,7 +7,9 @@ import (
 )
 
 func Test_Something(t *testing.T) {
-	decks, err := LoadAllDecks("E:\\Project\\Y\\Final\\TR_Consumables")
+	deckDirs, err := FindAllEndDirsectories("..\\test-images")
+	require.NoError(t, err)
+	decks, err := LoadAllDecks(deckDirs)
 	require.NoError(t, err)
 	require.NotNil(t, decks)
 }

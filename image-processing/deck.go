@@ -56,8 +56,12 @@ type Decks struct {
 	Decks []*Deck
 }
 
-func LoadAllDecks(rootDir string) (*Decks, error) {
-	var decks []*Deck
+func FindAllEndDirsectories(rootDir string) ([]string, error) {
+	// Convert to absolute
+	rootDir, err := filepath.Abs(rootDir)
+	if err != nil {
+		return nil, err
+	}
 
 	deckDirs, err := findEndDirectories(rootDir)
 	if err != nil {
@@ -66,11 +70,13 @@ func LoadAllDecks(rootDir string) (*Decks, error) {
 
 	fmt.Printf("Found %v deck directories\n", len(deckDirs))
 
-	for _, deckDir := range deckDirs {
-		deckDir, err = filepath.Abs(deckDir)
-		if err != nil {
-			return nil, err
-		}
+	return deckDirs, err
+}
+
+func LoadAllDecks(deckDirs []string) (*Decks, error) {
+	decks := make([]*Deck, len(deckDirs))
+
+	for deckIdx, deckDir := range deckDirs {
 
 		imageFiles, err := GetImageFiles(deckDir)
 		if err != nil {
@@ -87,7 +93,7 @@ func LoadAllDecks(rootDir string) (*Decks, error) {
 			return nil, err
 		}
 
-		decks = append(decks, deck)
+		decks[deckIdx] = deck
 	}
 
 	fmt.Printf("Created %v decks\n", len(decks))
@@ -99,12 +105,12 @@ func LoadAllDecks(rootDir string) (*Decks, error) {
 
 func (d *Decks) ExportDecks(resultDir string) error {
 	if d.Decks == nil || len(d.Decks) == 0 {
-		return errors.New("empty decks")
+		return errors.New("ExportDecks: empty decks")
 	}
 
 	err := os.MkdirAll(resultDir, 0755)
 	if err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return fmt.Errorf("ExportDecks: os.MkdirAll %v", err)
 	}
 
 	for _, deck := range d.Decks {
@@ -121,13 +127,12 @@ func (d *Deck) ExportDeck(resultDir string) error {
 	var color color.Color
 
 	for pageIdx := 0; pageIdx < d.Stats.pagesCount; pageIdx++ {
-		fmt.Println("page", pageIdx)
 		startIdx := pageIdx * tts_maxDeckSize
 		endIdx := pageIdx*tts_maxDeckSize + min(tts_maxDeckSize, len(d.Cards)-pageIdx*tts_maxDeckSize)
 		deckSlice := d.Cards[startIdx:endIdx]
 
 		rowC := d.Stats.cardsRowCount
-		colC := len(deckSlice)/tts_maxDeckHorizontalC + min(len(deckSlice)%tts_maxDeckHorizontalC, 1) // if rounded up add 0, if not add 1
+		colC := len(deckSlice)/rowC + min(len(deckSlice)%rowC, 1) // if rounded up add 0, if not add 1
 		if len(deckSlice) < d.Stats.cardsRowCount {
 			rowC = len(deckSlice)
 			colC = 1
@@ -151,13 +156,13 @@ func (d *Deck) ExportDeck(resultDir string) error {
 
 		file, err := os.Create(filepath.Join(resultDir, d.Name+fmt.Sprintf("_%v.png", pageIdx)))
 		if err != nil {
-			return err
+			return fmt.Errorf("ExportDeck: os.Create %v", err)
 		}
 		defer file.Close()
 
 		err = png.Encode(file, image)
 		if err != nil {
-			return err
+			return fmt.Errorf("ExportDeck: png.Encode %v", err)
 		}
 	}
 
