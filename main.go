@@ -5,13 +5,16 @@ import (
 	imageprocessing "tts-deck-gen/image-processing"
 )
 
+const (
+	Source    = "E:\\Project\\Y\\Final\\A-Decks"
+	ResultDir = "E:\\Project\\Y\\Final\\Generated"
+)
+
 func main() {
-	decks, err := imageprocessing.LoadAllDecks("E:\\Project\\Y\\Final\\Decks")
+	decks, err := imageprocessing.LoadAllDecks(Source)
 	if err != nil {
-		fmt.Println("FUCK MY LIFE", err)
+		fmt.Println("error:", err)
 	}
 
-	for _, deck := range decks.Decks {
-		fmt.Println(deck.DirPath)
-	}
+	decks.ExportDecks(ResultDir)
 }

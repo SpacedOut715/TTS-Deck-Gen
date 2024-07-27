@@ -13,8 +13,8 @@ func Test_Something(t *testing.T) {
 }
 
 func Test_Helpers(t *testing.T) {
-	imagesPath := "..\\test-images\\green"
-	imagePath := "..\\test-images\\green\\Elixir of Cleansing.png"
+	imagesPath := "..\\test-images\\A-green"
+	imagePath := "..\\test-images\\A-green\\Elixir of Cleansing.png"
 
 	t.Run("Get Image Files", func(t *testing.T) {
 		imageFiles, err := GetImageFiles(imagesPath)
