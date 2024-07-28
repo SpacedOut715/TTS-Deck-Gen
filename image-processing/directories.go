@@ -8,12 +8,17 @@ import (
 
 // Thank you ChatGPT!!!
 
-// findEndDirectories traverses the root directory and returns a slice of paths to end directories.
-func findEndDirectories(root string) ([]string, error) {
+// FindAllEndDirsectories traverses the root directory and returns a slice of paths to end directories.
+func FindAllEndDirsectories(root string) ([]string, error) {
+	root, err := filepath.Abs(root)
+	if err != nil {
+		return nil, err
+	}
+
 	var endDirs []string
 
 	// Walk the directory tree.
-	err := filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
+	if err = filepath.Walk(root, func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -34,9 +39,7 @@ func findEndDirectories(root string) ([]string, error) {
 		}
 
 		return nil
-	})
-
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 

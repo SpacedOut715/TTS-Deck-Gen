@@ -9,7 +9,7 @@ import (
 func Test_Something(t *testing.T) {
 	deckDirs, err := FindAllEndDirsectories("..\\test-images")
 	require.NoError(t, err)
-	decks, err := LoadAllDecks(deckDirs)
+	decks, err := LoadAllDecksDir(deckDirs)
 	require.NoError(t, err)
 	require.NotNil(t, decks)
 }

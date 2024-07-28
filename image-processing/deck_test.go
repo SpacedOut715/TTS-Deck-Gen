@@ -13,9 +13,9 @@ func Test_Deck(t *testing.T) {
 	t.Run("Test Load Stats", func(t *testing.T) {
 		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
-		decks, err := LoadAllDecks(deckDirs)
+		decks, err := LoadAllDecksDir(deckDirs)
 		require.NoError(t, err)
-		deck := decks.Decks[0]
+		deck := decks[0]
 
 		require.Equal(t, deck.Stats.cardWidth, 768)
 		require.Equal(t, deck.Stats.cardHeight, 1202)
@@ -27,9 +27,9 @@ func Test_Deck(t *testing.T) {
 	t.Run("Test CheckSizes", func(t *testing.T) {
 		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
-		decks, err := LoadAllDecks(deckDirs)
+		decks, err := LoadAllDecksDir(deckDirs)
 		require.NoError(t, err)
-		deck := decks.Decks[0]
+		deck := decks[0]
 
 		err = deck.CheckCardSizes()
 		require.NoError(t, err)
@@ -38,9 +38,9 @@ func Test_Deck(t *testing.T) {
 	t.Run("Export Test", func(t *testing.T) {
 		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
-		decks, err := LoadAllDecks(deckDirs)
+		decks, err := LoadAllDecksDir(deckDirs)
 		require.NoError(t, err)
-		deck := decks.Decks[0]
+		deck := decks[0]
 
 		err = deck.ExportDeck(exportPath)
 		require.NoError(t, err)
@@ -49,11 +49,25 @@ func Test_Deck(t *testing.T) {
 	t.Run("Export Test Big", func(t *testing.T) {
 		deckDirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
-		decks, err := LoadAllDecks(deckDirs)
+		decks, err := LoadAllDecksDir(deckDirs)
 		require.NoError(t, err)
-		deck := decks.Decks[1]
+		deck := decks[1]
 
 		err = deck.ExportDeck(exportPath)
+		require.NoError(t, err)
+	})
+
+	t.Run("Export Test Big+Big Cards (local)", func(t *testing.T) {
+		Source := "..\\generated"
+		ResultDir := "..\\generated"
+
+		deckDirs, err := FindAllEndDirsectories(Source)
+		require.NoError(t, err)
+		decks, err := LoadAllDecksDir(deckDirs)
+		require.NoError(t, err)
+		deck := decks[0]
+
+		err = deck.ExportDeck(ResultDir)
 		require.NoError(t, err)
 	})
 
@@ -65,10 +79,10 @@ func Test_Deck(t *testing.T) {
 
 		deckDirs, err := FindAllEndDirsectories(Source)
 		require.NoError(t, err)
-		decks, err := LoadAllDecks(deckDirs)
+		decks, err := LoadAllDecksDir(deckDirs)
 		require.NoError(t, err)
 
-		decks.ExportDecks(ResultDir)
+		ExportDecks(decks, ResultDir)
 	})
 
 	t.Run("Test Bug Width*10 >>> MaxRowCount", func(t *testing.T) {
@@ -77,10 +91,10 @@ func Test_Deck(t *testing.T) {
 		Source := "E:\\Project\\Y\\Final\\A-Decks\\Passives"
 		ResultDir := "..\\generated"
 
-		decks, err := LoadAllDecks([]string{Source})
+		decks, err := LoadAllDecksDir([]string{Source})
 		require.NoError(t, err)
 
-		decks.ExportDecks(ResultDir)
+		ExportDecks(decks, ResultDir)
 	})
 }
 
@@ -88,7 +102,7 @@ func Test_Directories(t *testing.T) {
 	rootPath := "..\\test-images"
 
 	t.Run("Find End Directories", func(t *testing.T) {
-		dirs, err := findEndDirectories(rootPath)
+		dirs, err := FindAllEndDirsectories(rootPath)
 		require.NoError(t, err)
 		require.Len(t, dirs, 3)
 	})

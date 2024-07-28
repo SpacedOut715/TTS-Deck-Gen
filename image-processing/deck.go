@@ -52,28 +52,7 @@ func NewDeck(cards []image.Image, deckDir string) (*Deck, error) {
 	return deck, nil
 }
 
-type Decks struct {
-	Decks []*Deck
-}
-
-func FindAllEndDirsectories(rootDir string) ([]string, error) {
-	// Convert to absolute
-	rootDir, err := filepath.Abs(rootDir)
-	if err != nil {
-		return nil, err
-	}
-
-	deckDirs, err := findEndDirectories(rootDir)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Printf("Found %v deck directories\n", len(deckDirs))
-
-	return deckDirs, err
-}
-
-func LoadAllDecks(deckDirs []string) (*Decks, error) {
+func LoadAllDecksDir(deckDirs []string) ([]*Deck, error) {
 	decks := make([]*Deck, len(deckDirs))
 
 	for deckIdx, deckDir := range deckDirs {
@@ -98,22 +77,15 @@ func LoadAllDecks(deckDirs []string) (*Decks, error) {
 
 	fmt.Printf("Created %v decks\n", len(decks))
 
-	return &Decks{
-		Decks: decks,
-	}, nil
+	return decks, nil
 }
 
-func (d *Decks) ExportDecks(resultDir string) error {
-	if d.Decks == nil || len(d.Decks) == 0 {
+func ExportDecks(decks []*Deck, resultDir string) error {
+	if len(decks) == 0 {
 		return errors.New("ExportDecks: empty decks")
 	}
 
-	err := os.MkdirAll(resultDir, 0755)
-	if err != nil {
-		return fmt.Errorf("ExportDecks: os.MkdirAll %v", err)
-	}
-
-	for _, deck := range d.Decks {
+	for _, deck := range decks {
 		err := deck.ExportDeck(resultDir)
 		if err != nil {
 			return err
@@ -124,46 +96,79 @@ func (d *Decks) ExportDecks(resultDir string) error {
 }
 
 func (d *Deck) ExportDeck(resultDir string) error {
-	var color color.Color
 
 	for pageIdx := 0; pageIdx < d.Stats.pagesCount; pageIdx++ {
-		startIdx := pageIdx * tts_maxDeckSize
-		endIdx := pageIdx*tts_maxDeckSize + min(tts_maxDeckSize, len(d.Cards)-pageIdx*tts_maxDeckSize)
+		// config for max cards per page
+		rowCount := d.Stats.cardsRowCount
+		columnCount := d.Stats.cardsColCount
+		pageCardCount := rowCount * columnCount
+
+		startIdx := pageIdx * pageCardCount
+		endIdx := startIdx + min(pageCardCount, len(d.Cards)-startIdx)
 		deckSlice := d.Cards[startIdx:endIdx]
 
-		rowC := d.Stats.cardsRowCount
-		colC := len(deckSlice)/rowC + min(len(deckSlice)%rowC, 1) // if rounded up add 0, if not add 1
-		if len(deckSlice) < d.Stats.cardsRowCount {
-			rowC = len(deckSlice)
-			colC = 1
-		}
-		image := image.NewRGBA(image.Rect(0, 0, d.Stats.cardWidth*rowC, d.Stats.cardHeight*colC))
-
-		for deckColumnIdx := 0; deckColumnIdx < colC; deckColumnIdx++ {
-			for deckRowIdx := 0; deckRowIdx < rowC; deckRowIdx++ {
-				if (deckColumnIdx*rowC + deckRowIdx) >= len(deckSlice) {
-					break
-				}
-				card := deckSlice[deckColumnIdx*rowC+deckRowIdx]
-				for cardHeight := 0; cardHeight < d.Stats.cardHeight; cardHeight++ {
-					for cardWidth := 0; cardWidth < d.Stats.cardWidth; cardWidth++ {
-						color = card.At(cardWidth, cardHeight)
-						image.Set(deckRowIdx*d.Stats.cardWidth+cardWidth, deckColumnIdx*d.Stats.cardHeight+cardHeight, color)
-					}
-				}
+		// If leftover slice is smaller than pageCardCount
+		if len(deckSlice) < pageCardCount {
+			columnCount = len(deckSlice)/rowCount + min(len(deckSlice)%rowCount, 1)
+			if len(deckSlice) < d.Stats.cardsRowCount {
+				rowCount = len(deckSlice)
 			}
 		}
 
-		file, err := os.Create(filepath.Join(resultDir, d.Name+fmt.Sprintf("_%v.png", pageIdx)))
-		if err != nil {
-			return fmt.Errorf("ExportDeck: os.Create %v", err)
-		}
-		defer file.Close()
+		image := d.FillImage(deckSlice, columnCount, rowCount)
 
-		err = png.Encode(file, image)
+		err := d.SaveImage(image, resultDir, pageIdx)
 		if err != nil {
-			return fmt.Errorf("ExportDeck: png.Encode %v", err)
+			return err
 		}
+	}
+
+	return nil
+}
+
+func (d *Deck) FillImage(deckSlice []image.Image, columnCount, rowCount int) image.Image {
+	image := image.NewRGBA(image.Rect(0, 0, d.Stats.cardWidth*rowCount, d.Stats.cardHeight*columnCount))
+
+	for columnIdx := 0; columnIdx < columnCount; columnIdx++ {
+		for rowIdx := 0; rowIdx < rowCount; rowIdx++ {
+			// If row is not full, break out
+			if (columnIdx*rowCount + rowIdx) >= len(deckSlice) {
+				break
+			}
+
+			d.FillCard(image, deckSlice[columnIdx*rowCount+rowIdx], rowIdx, columnIdx)
+		}
+	}
+
+	return image
+}
+
+func (d *Deck) FillCard(image *image.RGBA, card image.Image, row, col int) {
+	var color color.Color
+
+	for cardHeight := 0; cardHeight < d.Stats.cardHeight; cardHeight++ {
+		for cardWidth := 0; cardWidth < d.Stats.cardWidth; cardWidth++ {
+			color = card.At(cardWidth, cardHeight)
+			image.Set(row*d.Stats.cardWidth+cardWidth, col*d.Stats.cardHeight+cardHeight, color)
+		}
+	}
+}
+
+func (d *Deck) SaveImage(image image.Image, resultDir string, pageIdx int) error {
+	err := os.MkdirAll(resultDir, 0755)
+	if err != nil {
+		return fmt.Errorf("SaveImage: os.MkdirAll %v", err)
+	}
+
+	file, err := os.Create(filepath.Join(resultDir, d.Name+fmt.Sprintf("_%v.png", pageIdx)))
+	if err != nil {
+		return fmt.Errorf("SaveImage: os.Create %v", err)
+	}
+	defer file.Close()
+
+	err = png.Encode(file, image)
+	if err != nil {
+		return fmt.Errorf("SaveImage: png.Encode %v", err)
 	}
 
 	return nil
@@ -198,10 +203,9 @@ func (d *Deck) GetCount() (stats *DeckStats) {
 	}
 
 	stats.cardsRowCount = min(tts_maxWidth/stats.cardWidth, tts_maxDeckHorizontalC)
-	// stats.cardsColCount = tts_maxHeight / stats.cardHeight
-	stats.cardsColCount = len(d.Cards)/stats.cardsRowCount + 1
-
-	stats.pagesCount = len(d.Cards)/tts_maxDeckSize + 1 // ili ColCount/7+1
+	// stats.cardsColCountPP = len(d.Cards)/stats.cardsRowCount + 1
+	stats.cardsColCount = min(tts_maxHeight/stats.cardHeight, tts_maxDeckVerticalC)
+	stats.pagesCount = (len(d.Cards)/stats.cardsRowCount)/tts_maxDeckVerticalC + 1
 
 	return
 }

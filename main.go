@@ -16,10 +16,10 @@ func main() {
 		fmt.Println("error:", err)
 	}
 
-	decks, err := imageprocessing.LoadAllDecks(deckDirs)
+	decks, err := imageprocessing.LoadAllDecksDir(deckDirs)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
 
-	decks.ExportDecks(ResultDir)
+	imageprocessing.ExportDecks(decks, ResultDir)
 }
