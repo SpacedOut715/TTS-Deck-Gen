@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
-	imageprocessing "tts-deck-gen/image-processing"
+	"os"
+	clicommands "tts-deck-gen/cli-commands"
+
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -11,15 +14,18 @@ const (
 )
 
 func main() {
-	deckDirs, err := imageprocessing.FindAllEndDirsectories(Source)
-	if err != nil {
-		fmt.Println("error:", err)
+
+	var rootCmd = &cobra.Command{
+		Use:   "tts-deck-gen",
+		Short: "A brief description of your application",
+		Long:  `A longer description of your application.`,
 	}
 
-	decks, err := imageprocessing.LoadAllDecksDir(deckDirs)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
+	rootCmd.AddCommand(clicommands.GenerateAutoLocateCommand())
+	rootCmd.AddCommand(clicommands.GenerateWithConfigCommand())
 
-	imageprocessing.ExportDecks(decks, ResultDir)
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }
