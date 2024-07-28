@@ -1,0 +1,17 @@
+{
+    "decks": [
+        {
+            "path": "D:/Path/To/File",
+            "fileName": "deck1.png"
+        },
+        {
+            "path": "D:/Path/To/File",
+            "fileName": "deck2.png"
+        },
+        {
+            "path": "D:/Path/To/File",
+            "fileName": "deck3.png"
+        }
+    ],
+    "exportPath": "D:/Path/To/Directory"
+}

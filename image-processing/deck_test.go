@@ -71,6 +71,21 @@ func Test_Deck(t *testing.T) {
 		require.NoError(t, err)
 	})
 
+	t.Run("Test Load Config", func(t *testing.T) {
+		t.Skip()
+
+		ConfigPath := "C:\\Users\\Sasa\\Desktop\\config.json"
+
+		config, err := ParseFromJson(ConfigPath)
+		require.NoError(t, err)
+
+		decks, err := LoadAllDecksConfig(config)
+		require.NoError(t, err)
+
+		ExportDecks(decks, config.ExportPath)
+
+	})
+
 	t.Run("Test Full Functionality", func(t *testing.T) {
 		t.Skip()
 

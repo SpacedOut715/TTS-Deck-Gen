@@ -34,22 +34,34 @@ type Deck struct {
 	Stats *DeckStats
 }
 
-func NewDeck(cards []image.Image, deckDir string) (*Deck, error) {
-	name := strings.Replace(deckDir[3:], "\\", "-", -1)
+func LoadAllDecksConfig(config *DecksConfig) ([]*Deck, error) {
+	decks := make([]*Deck, len(config.Decks))
 
-	deck := &Deck{
-		Name:  name,
-		Cards: cards,
+	for deckIdx, deckConfig := range config.Decks {
+
+		imageFiles, err := GetImageFiles(deckConfig.DeckPath)
+		if err != nil {
+			return nil, err
+		}
+
+		images, err := LoadImages(imageFiles)
+		if err != nil {
+			return nil, err
+		}
+
+		deck, err := NewDeck(images, deckConfig.DeckFileName)
+		if err != nil {
+			return nil, err
+		}
+
+		decks[deckIdx] = deck
+
+		fmt.Printf("Loaded deck %v\n", deck.Name)
 	}
 
-	err := deck.CheckCardSizes()
-	if err != nil {
-		return nil, err
-	}
+	fmt.Printf("Loaded %v decks\n", len(decks))
 
-	deck.Stats = deck.GetCount()
-
-	return deck, nil
+	return decks, nil
 }
 
 func LoadAllDecksDir(deckDirs []string) ([]*Deck, error) {
@@ -67,12 +79,15 @@ func LoadAllDecksDir(deckDirs []string) ([]*Deck, error) {
 			return nil, err
 		}
 
-		deck, err := NewDeck(images, deckDir)
+		deckName := strings.Replace(deckDir[3:], "\\", "-", -1)
+		deck, err := NewDeck(images, deckName)
 		if err != nil {
 			return nil, err
 		}
 
 		decks[deckIdx] = deck
+
+		fmt.Printf("Loaded deck %v\n", deck.Name)
 	}
 
 	fmt.Printf("Created %v decks\n", len(decks))
@@ -90,9 +105,29 @@ func ExportDecks(decks []*Deck, resultDir string) error {
 		if err != nil {
 			return err
 		}
+
+		fmt.Printf("Exported deck %v", deck.Name)
 	}
 
+	fmt.Printf("Exported %v decks to %v", len(decks), resultDir)
+
 	return nil
+}
+
+func NewDeck(cards []image.Image, name string) (*Deck, error) {
+	deck := &Deck{
+		Name:  name,
+		Cards: cards,
+	}
+
+	err := deck.CheckCardSizes()
+	if err != nil {
+		return nil, err
+	}
+
+	deck.Stats = deck.GetCount()
+
+	return deck, nil
 }
 
 func (d *Deck) ExportDeck(resultDir string) error {

@@ -37,18 +37,20 @@ func GenerateWithConfigCommand() *cobra.Command {
 func generateWithConfigCommand(cmd *cobra.Command, _ []string) {
 	config, err := imageprocessing.ParseFromJson(gwcParams.configPath)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error parsing json config %v\n", err)
+		return
 	}
 
-	_ = config
-	decks, err := imageprocessing.LoadAllDecksDir([]string{})
+	decks, err := imageprocessing.LoadAllDecksConfig(config)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error loading decks %v\n", err)
+		return
 	}
 
-	err = imageprocessing.ExportDecks(decks, "") //config.ResultPath
+	err = imageprocessing.ExportDecks(decks, config.ExportPath)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error exporting decks %v\n", err)
+		return
 	}
 }
 

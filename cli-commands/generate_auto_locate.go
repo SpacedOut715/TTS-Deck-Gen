@@ -43,17 +43,20 @@ func GenerateAutoLocateCommand() *cobra.Command {
 func generateAutoLocateCommand(cmd *cobra.Command, _ []string) {
 	deckDirs, err := imageprocessing.FindAllEndDirsectories(galParams.searchDir)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error locating directories %v\n", err)
+		return
 	}
 
 	decks, err := imageprocessing.LoadAllDecksDir(deckDirs)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error loading decks %v\n", err)
+		return
 	}
 
 	err = imageprocessing.ExportDecks(decks, galParams.exportDir)
 	if err != nil {
-		fmt.Println("")
+		fmt.Printf("Error exporting decks %v\n", err)
+		return
 	}
 }
 
