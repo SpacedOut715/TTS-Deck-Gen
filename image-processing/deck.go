@@ -14,7 +14,9 @@ import (
 const (
 	tts_maxWidth           = 10000
 	tts_maxHeight          = 10000
+	tts_minDeckHorizontalC = 2
 	tts_maxDeckHorizontalC = 10
+	tts_minDeckVerticalC   = 2
 	tts_maxDeckVerticalC   = 7
 	tts_maxDeckSize        = 70
 )
@@ -56,7 +58,7 @@ func LoadAllDecksConfig(config *DecksConfig) ([]*Deck, error) {
 
 		decks[deckIdx] = deck
 
-		fmt.Printf("Loaded deck %v\n", deck.Name)
+		fmt.Printf("Loaded deck %v with %v cards\n", deck.Name, len(deck.Cards))
 	}
 
 	fmt.Printf("Loaded %v decks\n", len(decks))
@@ -101,15 +103,15 @@ func ExportDecks(decks []*Deck, resultDir string) error {
 	}
 
 	for _, deck := range decks {
-		err := deck.ExportDeck(resultDir)
+		deckName, err := deck.ExportDeck(resultDir)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Exported deck %v", deck.Name)
+		fmt.Printf("Exported deck %v\n", deckName)
 	}
 
-	fmt.Printf("Exported %v decks to %v", len(decks), resultDir)
+	fmt.Printf("Exported %v decks to %v\n", len(decks), resultDir)
 
 	return nil
 }
@@ -130,13 +132,15 @@ func NewDeck(cards []image.Image, name string) (*Deck, error) {
 	return deck, nil
 }
 
-func (d *Deck) ExportDeck(resultDir string) error {
+func (d *Deck) ExportDeck(resultDir string) (string, error) {
+	var deckName string
+	var err error
 
 	for pageIdx := 0; pageIdx < d.Stats.pagesCount; pageIdx++ {
 		// config for max cards per page
-		rowCount := d.Stats.cardsRowCount
-		columnCount := d.Stats.cardsColCount
-		pageCardCount := rowCount * columnCount
+		rowCount := &d.Stats.cardsRowCount
+		columnCount := &d.Stats.cardsColCount
+		pageCardCount := *rowCount * *columnCount
 
 		startIdx := pageIdx * pageCardCount
 		endIdx := startIdx + min(pageCardCount, len(d.Cards)-startIdx)
@@ -144,24 +148,24 @@ func (d *Deck) ExportDeck(resultDir string) error {
 
 		// If leftover slice is smaller than pageCardCount
 		if len(deckSlice) < pageCardCount {
-			columnCount = len(deckSlice)/rowCount + min(len(deckSlice)%rowCount, 1)
-			if len(deckSlice) < d.Stats.cardsRowCount {
-				rowCount = len(deckSlice)
+			*columnCount = len(deckSlice) / *rowCount + min(len(deckSlice)%*rowCount, 1)
+			if len(deckSlice) < *rowCount {
+				*rowCount = len(deckSlice)
 			}
 		}
 
-		image := d.FillImage(deckSlice, columnCount, rowCount)
+		image := d.FillImage(deckSlice, *rowCount, *columnCount)
 
-		err := d.SaveImage(image, resultDir, pageIdx)
+		deckName, err = d.SaveImage(image, resultDir, pageIdx, *rowCount, *columnCount)
 		if err != nil {
-			return err
+			return deckName, err
 		}
 	}
 
-	return nil
+	return deckName, nil
 }
 
-func (d *Deck) FillImage(deckSlice []image.Image, columnCount, rowCount int) image.Image {
+func (d *Deck) FillImage(deckSlice []image.Image, rowCount, columnCount int) image.Image {
 	image := image.NewRGBA(image.Rect(0, 0, d.Stats.cardWidth*rowCount, d.Stats.cardHeight*columnCount))
 
 	for columnIdx := 0; columnIdx < columnCount; columnIdx++ {
@@ -189,24 +193,25 @@ func (d *Deck) FillCard(image *image.RGBA, card image.Image, row, col int) {
 	}
 }
 
-func (d *Deck) SaveImage(image image.Image, resultDir string, pageIdx int) error {
+func (d *Deck) SaveImage(image image.Image, resultDir string, pageIdx, rowCount, columnCount int) (string, error) {
 	err := os.MkdirAll(resultDir, 0755)
 	if err != nil {
-		return fmt.Errorf("SaveImage: os.MkdirAll %v", err)
+		return "", fmt.Errorf("SaveImage: os.MkdirAll %v", err)
 	}
 
-	file, err := os.Create(filepath.Join(resultDir, d.Name+fmt.Sprintf("_%v.png", pageIdx)))
+	deckName := d.Name + fmt.Sprintf("_%vx%v_%v_%v.png", rowCount, columnCount, len(d.Cards), pageIdx)
+	file, err := os.Create(filepath.Join(resultDir, deckName))
 	if err != nil {
-		return fmt.Errorf("SaveImage: os.Create %v", err)
+		return "", fmt.Errorf("SaveImage: os.Create %v", err)
 	}
 	defer file.Close()
 
 	err = png.Encode(file, image)
 	if err != nil {
-		return fmt.Errorf("SaveImage: png.Encode %v", err)
+		return "", fmt.Errorf("SaveImage: png.Encode %v", err)
 	}
 
-	return nil
+	return deckName, nil
 }
 
 func (d *Deck) CheckCardSizes() error {
@@ -230,8 +235,8 @@ func (d *Deck) GetCount() (stats *DeckStats) {
 	}
 
 	if len(d.Cards) <= tts_maxDeckHorizontalC {
-		stats.cardsRowCount = len(d.Cards)
-		stats.cardsColCount = 1
+		stats.cardsRowCount = max(len(d.Cards)/tts_minDeckVerticalC, tts_minDeckHorizontalC)
+		stats.cardsColCount = tts_minDeckVerticalC
 		stats.pagesCount = 1
 
 		return stats
