@@ -156,7 +156,7 @@ func (d *Deck) ExportDeck(resultDir string) (string, error) {
 
 		image := d.FillImage(deckSlice, *rowCount, *columnCount)
 
-		deckName, err = d.SaveImage(image, resultDir, pageIdx, *rowCount, *columnCount)
+		deckName, err = d.SaveImage(image, resultDir, pageIdx, *rowCount, *columnCount, len(deckSlice))
 		if err != nil {
 			return deckName, err
 		}
@@ -193,13 +193,13 @@ func (d *Deck) FillCard(image *image.RGBA, card image.Image, row, col int) {
 	}
 }
 
-func (d *Deck) SaveImage(image image.Image, resultDir string, pageIdx, rowCount, columnCount int) (string, error) {
+func (d *Deck) SaveImage(image image.Image, resultDir string, pageIdx, rowCount, columnCount, cardCount int) (string, error) {
 	err := os.MkdirAll(resultDir, 0755)
 	if err != nil {
 		return "", fmt.Errorf("SaveImage: os.MkdirAll %v", err)
 	}
 
-	deckName := d.Name + fmt.Sprintf("_%vx%v_%v_%v.png", rowCount, columnCount, len(d.Cards), pageIdx)
+	deckName := d.Name + fmt.Sprintf("_%vx%v_%v_%v.png", rowCount, columnCount, cardCount, pageIdx)
 	file, err := os.Create(filepath.Join(resultDir, deckName))
 	if err != nil {
 		return "", fmt.Errorf("SaveImage: os.Create %v", err)
