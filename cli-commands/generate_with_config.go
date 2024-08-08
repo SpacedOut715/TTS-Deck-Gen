@@ -26,7 +26,7 @@ func GenerateWithConfigCommand() *cobra.Command {
 
 	cmd.Flags().StringVar(
 		&gwcParams.configPath,
-		"configPath",
+		"config-path",
 		"",
 		"JSON Config file to be parsed",
 	)

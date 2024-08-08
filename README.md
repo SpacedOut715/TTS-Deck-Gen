@@ -18,19 +18,19 @@ go build
 where $COMMAND can be:
 # auto-locate 
   params:
-  --searchDir - path to root directory that will be searched, only END subdirectories are valid.
+  --search-dir - path to root directory that will be searched, only END subdirectories are valid.
   (if test-images directory is provided, valid directories would be: A-green, B-big-deck, C-yellow)
-  --exportDir - path to directory where deck images will be exported.
+  --export-dir - path to directory where deck images will be exported.
 # with-config
   params:
-  --configPath - path to json configuration file
+  --config-path - path to json configuration file
 ```
 
 ### Example usage
 
 ```
-./tts-deck-gen auto-locate --searchDir "D:/Path/To/Root/Deck/Directory" --exportDir "D:/Path/To/Generated"
-./tts-deck-gen with-config --configPath "D:/Path/To/Config/Directory/config.json"
+./tts-deck-gen auto-locate --search-dir "D:/Path/To/Root/Deck/Directory" --export-dir "D:/Path/To/Generated"
+./tts-deck-gen with-config --config-path "D:/Path/To/Config/Directory/config.json"
 ```
 
 ### Example config

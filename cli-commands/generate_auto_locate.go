@@ -25,14 +25,14 @@ func GenerateAutoLocateCommand() *cobra.Command {
 
 	cmd.Flags().StringVar(
 		&galParams.searchDir,
-		"searchDir",
+		"search-dir",
 		"",
 		"Path to directory to be searched",
 	)
 
 	cmd.Flags().StringVar(
 		&galParams.exportDir,
-		"exportDir",
+		"export-dir",
 		"",
 		"Path to directory where decks will be expoted",
 	)
@@ -64,25 +64,25 @@ func generateAutoLocateValidateParams(_ *cobra.Command, _ []string) error {
 	fileInfo, err := os.Stat(galParams.searchDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("searchDir doesn't exist: %v", err)
+			return fmt.Errorf("search-dir doesn't exist: %v", err)
 		}
 		return fmt.Errorf("unknown error: %v", err)
 	}
 
 	if !fileInfo.IsDir() {
-		return fmt.Errorf("searchDir is not a directory")
+		return fmt.Errorf("search-dir is not a directory")
 	}
 
 	fileInfo, err = os.Stat(galParams.exportDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("exportDir doesn't exist: %v", err)
+			return fmt.Errorf("export-dir doesn't exist: %v", err)
 		}
 		return fmt.Errorf("unknown error: %v", err)
 	}
 
 	if !fileInfo.IsDir() {
-		return fmt.Errorf("exportDir is not a directory")
+		return fmt.Errorf("export-dir is not a directory")
 	}
 
 	return nil
