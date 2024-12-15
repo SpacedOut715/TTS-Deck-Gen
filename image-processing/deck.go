@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -235,7 +236,8 @@ func (d *Deck) GetCount() (stats *DeckStats) {
 	}
 
 	if len(d.Cards) <= tts_maxDeckHorizontalC {
-		stats.cardsRowCount = max(len(d.Cards)/tts_minDeckVerticalC, tts_minDeckHorizontalC)
+		rowCount := int(math.Ceil(float64(len(d.Cards)) / tts_minDeckVerticalC))
+		stats.cardsRowCount = max(rowCount, tts_minDeckHorizontalC)
 		stats.cardsColCount = tts_minDeckVerticalC
 		stats.pagesCount = 1
 

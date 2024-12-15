@@ -59,6 +59,21 @@ func Test_Deck(t *testing.T) {
 		require.NotEmpty(t, deckName)
 	})
 
+	t.Run("Export Test Big - Odd number of cards in small deck", func(t *testing.T) {
+		deckDirs, err := FindAllEndDirsectories(rootPath)
+		require.NoError(t, err)
+		decks, err := LoadAllDecksDir(deckDirs)
+		require.NoError(t, err)
+		deck := decks[1]
+
+		deck, err = NewDeck(deck.Cards[0:7], "odd")
+		require.NoError(t, err)
+
+		deckName, err := deck.ExportDeck(exportPath)
+		require.NoError(t, err)
+		require.NotEmpty(t, deckName)
+	})
+
 	t.Run("Export Test Big+Big Cards (local)", func(t *testing.T) {
 		Source := "..\\generated"
 		ResultDir := "..\\generated"
